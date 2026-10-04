@@ -1,0 +1,13 @@
+# OS / editör çöpü
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Geçici
+*.tmp
+*.bak

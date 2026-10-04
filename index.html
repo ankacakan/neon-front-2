@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NEON FRONT 2.0 // İzometrik RTS</title>
+
+<!-- ============================================================
+     THREE.JS 0.186.1 — ESM + addons (postprocessing, GLTF, utils)
+     Not: .glb ve PBR doku dosyaları CORS nedeniyle file:// ile
+     yüklenemez. Tek komutluk sunucu: serve.cmd  (veya serve.ps1)
+     ============================================================ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== 3D SAHNE ===================== -->
+  <canvas id="scene"></canvas>
+  <div id="selectBox"></div>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud">
+
+    <!-- ---------- ÜST SOL: KAYNAKLAR + İSTATİSTİK ---------- -->
+    <div class="hud-top-left">
+      <div class="panel panel-resources">
+        <div class="res-row">
+          <span class="res res-supply"><i></i><b id="resSupply">0</b><small>TEDARİK</small></span>
+          <span class="res res-fuel"><i></i><b id="resFuel">0</b><small>YAKIT</small></span>
+          <span class="res res-ammo"><i></i><b id="resAmmo">0</b><small>MÜHİMMAT</small></span>
+        </div>
+        <div class="res-income" id="resIncome">+0 / 0 / 0 sn</div>
+      </div>
+
+      <div class="panel panel-stats">
+        <div class="brand">NEON<span>FRONT</span> <em>2.0</em></div>
+        <div class="stat-grid">
+          <div class="stat"><span class="k">DALGA</span><span class="v" id="statWave">0</span></div>
+          <div class="stat"><span class="k">İMHA</span><span class="v" id="statKills">0</span></div>
+          <div class="stat"><span class="k">KAYIP</span><span class="v" id="statLost">0</span></div>
+          <div class="stat"><span class="k">BİRİM</span><span class="v" id="statUnits">0</span></div>
+        </div>
+        <div class="fps-row">
+          <span class="k">FPS</span><span class="v" id="statFps">--</span>
+          <span class="k">SÜRE</span><span class="v" id="statTime">00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- ÜST ORTA: GÖREV ---------- -->
+    <div class="panel panel-mission">
+      <div class="msn-head">
+        <span class="msn-tag">GÖREV</span>
+        <span class="msn-name" id="missionName">—</span>
+        <span class="msn-clock" id="missionClock">00:00</span>
+      </div>
+      <ul class="objective-list" id="objectiveList"></ul>
+    </div>
+
+    <!-- ---------- ÜST SAĞ: MİNİHARİTA ---------- -->
+    <div class="panel panel-minimap">
+      <div class="mm-head">TAKTİK HARİTA</div>
+      <canvas id="minimap" width="204" height="204"></canvas>
+      <div class="mm-foot">
+        <span class="dot blue"></span>DOST
+        <span class="dot red"></span>DÜŞMAN
+        <button id="settingsBtn" class="mm-btn" type="button" title="Ayarlar">⚙</button>
+      </div>
+    </div>
+
+    <!-- ---------- ALT: SEÇİM / İNŞA / YETENEK / ÜS ---------- -->
+    <div class="hud-bottom">
+
+      <div class="panel panel-selection">
+        <div class="sel-head">SEÇİLİ BİRLİK</div>
+        <div class="sel-count"><span id="selCount">0</span><small>birim</small></div>
+        <div class="sel-bar"><div class="sel-bar-fill" id="selHpFill"></div></div>
+        <div class="sel-hint" id="selHint">Bir birime tıkla veya sol tuşla alan seç</div>
+      </div>
+
+      <div class="panel panel-build">
+        <div class="pb-head">
+          <span>ÜRETİM</span>
+          <div class="prod-track"><div class="prod-fill" id="prodBar"></div></div>
+          <span class="prod-label" id="prodLabel"></span>
+        </div>
+        <div class="build-list" id="buildList"></div>
+      </div>
+
+      <div class="panel panel-orders">
+        <div class="hint-row">
+          <span><b>SOL TIK</b> seç</span>
+          <span><b>SÜRÜKLE</b> alan</span>
+          <span><b>SAĞ TIK</b> emir</span>
+          <span><b>1-4</b> üret</span>
+          <span><b>W A S D</b> kamera</span>
+          <span><b>Q / E</b> döndür</span>
+          <span><b>TEKER</b> zoom</span>
+          <span><b>BOŞLUK</b> odak</span>
+          <span><b>ESC</b> duraklat</span>
+        </div>
+        <div class="abilities">
+          <button id="btnReinforce" class="ability" type="button">
+            <span class="ab-icon">🛡️</span>
+            <span class="ab-name">TAKVİYE</span>
+            <span class="ab-key">R</span>
+            <span class="ab-cd" id="cdReinforce"></span>
+          </button>
+          <button id="btnAirstrike" class="ability" type="button">
+            <span class="ab-icon">✈️</span>
+            <span class="ab-name">HAVA SALDIRISI</span>
+            <span class="ab-key">B</span>
+            <span class="ab-cd" id="cdAirstrike"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel panel-hq">
+        <div class="hq-row">
+          <span class="tag blue">ÜS</span>
+          <div class="hq-bar"><div class="hq-fill blue" id="hqBlueFill"></div></div>
+          <span class="hq-pct" id="hqBluePct">100%</span>
+        </div>
+        <div class="hq-row">
+          <span class="tag red">ÜS</span>
+          <div class="hq-bar"><div class="hq-fill red" id="hqRedFill"></div></div>
+          <span class="hq-pct" id="hqRedPct">100%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- ===================== BAŞLANGIÇ ===================== -->
+  <div id="overlay-start" class="overlay">
+    <div class="panel-modal">
+      <div class="modal-tag">GERÇEK ZAMANLI STRATEJİ · CC0 PBR</div>
+      <h1 class="modal-title">NEON <em>FRONT</em> <span class="ver">2.0</span></h1>
+      <p class="modal-sub">Sinematik izometrik kamera · SSAO + Bloom + tilt-shift · Modüler mimari · 5 görevlik kampanya</p>
+
+      <div class="modal-cols">
+        <div class="modal-col">
+          <h3>CEPHE</h3>
+          <p>Nehir iki cepheyi ayırıyor. <b class="c-blue">Mavi</b> taraf yeşil ovada,
+             <b class="c-red">Kırmızı</b> taraf çölde. Tek geçiş noktası <b>köprü</b>.</p>
+          <p>Karargahını koru, kontrol noktalarını ele geçir, düşman üssünü yık.</p>
+        </div>
+        <div class="modal-col">
+          <h3>KONTROLLER</h3>
+          <ul>
+            <li><b>Sol tık / sürükle</b> — seçim</li>
+            <li><b>Sağ tık</b> — hareket / saldırı</li>
+            <li><b>1-4</b> — tank / topçu / piyade / helikopter üret</li>
+            <li><b>W A S D</b> — kamera · <b>Q/E</b> — döndür</li>
+            <li><b>R</b> — takviye · <b>B</b> — hava saldırısı</li>
+            <li><b>ESC</b> — duraklat / ayarlar</li>
+          </ul>
+        </div>
+      </div>
+
+      <button id="startBtn" class="btn btn-primary" type="button">KAMPANYAYA GİR</button>
+    </div>
+  </div>
+
+  <!-- ===================== GÖREV SEÇİMİ ===================== -->
+  <div id="overlay-missions" class="overlay hidden">
+    <div class="panel-modal wide">
+      <div class="modal-tag">KAMPANYA</div>
+      <h2 class="modal-title sm">GÖREV SEÇİMİ</h2>
+      <div class="rank-wrap" id="rankBadge"></div>
+      <div class="mission-list" id="missionList"></div>
+      <div class="modal-actions">
+        <button id="resetProgressBtn" class="btn btn-ghost" type="button">İLERLEMEYİ SIFIRLA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== BRİFİNG ===================== -->
+  <div id="overlay-briefing" class="overlay hidden">
+    <div class="panel-modal">
+      <div class="modal-tag">BRİFİNG</div>
+      <h2 class="modal-title sm" id="briefingTitle">GÖREV</h2>
+      <p class="modal-sub" id="briefingSub"></p>
+      <p class="briefing-text" id="briefingText"></p>
+      <h3 class="obj-head">HEDEFLER</h3>
+      <ul class="objective-list big" id="briefingObjectives"></ul>
+      <div class="modal-actions">
+        <button id="briefingStartBtn" class="btn btn-primary" type="button">GÖREVİ BAŞLAT</button>
+        <button id="briefingBackBtn" class="btn btn-ghost" type="button">GERİ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SONUÇ ===================== -->
+  <div id="overlay-end" class="overlay hidden">
+    <div class="panel-modal">
+      <div class="modal-tag" id="endTag">SONUÇ</div>
+      <h1 class="modal-title" id="endTitle">ZAFER</h1>
+      <p class="modal-sub" id="endSub"></p>
+      <div class="end-grid">
+        <div class="end-cell"><span>İMHA EDİLEN</span><b id="endKills">0</b></div>
+        <div class="end-cell"><span>KAYBEDİLEN</span><b id="endLost">0</b></div>
+        <div class="end-cell"><span>DALGA</span><b id="endWave">0</b></div>
+        <div class="end-cell"><span>SÜRE</span><b id="endTime">00:00</b></div>
+        <div class="end-cell wide"><span>KAZANILAN</span><b id="endXp">+0 XP</b></div>
+      </div>
+      <div class="modal-actions">
+        <button id="nextMissionBtn" class="btn btn-primary" type="button">SONRAKİ GÖREV</button>
+        <button id="restartBtn" class="btn" type="button">YENİDEN OYNA</button>
+        <button id="menuFromEndBtn" class="btn btn-ghost" type="button">GÖREV SEÇİMİ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DURAKLAT ===================== -->
+  <div id="overlay-pause" class="overlay hidden">
+    <div class="panel-modal small">
+      <div class="modal-tag">DURAKLATILDI</div>
+      <h2 class="modal-title sm">OPERASYON BEKLEMEDE</h2>
+      <div class="modal-actions col">
+        <button id="resumeBtn" class="btn btn-primary" type="button">DEVAM ET</button>
+        <button id="menuFromPauseBtn" class="btn" type="button">GÖREV SEÇİMİ</button>
+        <button id="quitBtn" class="btn btn-ghost" type="button">ANA MENÜ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== AYARLAR ===================== -->
+  <div id="overlay-settings" class="overlay hidden">
+    <div class="panel-modal small">
+      <div class="modal-tag">GRAFİK</div>
+      <h2 class="modal-title sm">AYARLAR</h2>
+      <div class="settings-list" id="settingsList"></div>
+      <div class="modal-actions">
+        <button id="settingsCloseBtn" class="btn btn-primary" type="button">KAPAT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== YÜKLEME ===================== -->
+  <div id="loading" class="overlay">
+    <div class="panel-modal small">
+      <div class="spinner"></div>
+      <h2 class="load-title">NEON FRONT 2.0</h2>
+      <div class="load-track"><div class="load-fill" id="loadBar"></div></div>
+      <p class="load-msg" id="loadText">Motor başlatılıyor…</p>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

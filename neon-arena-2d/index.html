@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>NEON ARENA // Survival</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===================== OYUN ALANI ===================== -->
+  <canvas id="game"></canvas>
+
+  <!-- ===================== HUD (Skor / Level / HP) ===================== -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+
+      <!-- Sol blok: Can + XP -->
+      <div class="hud-left">
+        <div class="stat-row">
+          <span class="stat-label">❤️ CAN</span>
+          <span class="stat-value" id="hpText">100 / 100</span>
+        </div>
+        <div class="bar bar-hp">
+          <div class="bar-fill" id="hpBar"></div>
+          <div class="bar-shine"></div>
+        </div>
+
+        <div class="stat-row">
+          <span class="stat-label">⭐ LEVEL</span>
+          <span class="stat-value" id="levelText">1</span>
+        </div>
+        <div class="bar bar-xp">
+          <div class="bar-fill" id="xpBar"></div>
+          <div class="bar-shine"></div>
+        </div>
+      </div>
+
+      <!-- Sağ blok: Skor + Süre -->
+      <div class="hud-right">
+        <div class="stat-label small">SKOR</div>
+        <div class="score-value" id="scoreText">0</div>
+        <div class="timer" id="timeText">00:00</div>
+      </div>
+
+    </div>
+
+    <!-- Alt bilgi şeridi: aktif yükseltmeler + zorluk -->
+    <div class="hud-bottom">
+      <div class="perk-strip" id="perkStrip"></div>
+      <div class="danger-label" id="dangerLabel">ZORLUK: <span id="dangerValue">1</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== ANA MENÜ ===================== -->
+  <div id="menu" class="overlay">
+    <div class="panel">
+      <h1 class="game-title">NEON ARENA</h1>
+      <p class="game-sub">/// SURVIVAL ///</p>
+
+      <div class="menu-art">
+        <span class="blip">🟦</span>
+        <span class="blip">🟩</span>
+        <span class="blip">🟪</span>
+        <span class="blip">🟨</span>
+        <span class="blip">🟥</span>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl"><span class="key">W A S D</span> HAREKET</div>
+        <div class="ctrl"><span class="key">FARE</span> NİŞAN AL</div>
+        <div class="ctrl"><span class="key">OTOMATİK</span> ATEŞ</div>
+        <div class="ctrl"><span class="key">ESC</span> DURAKLAT</div>
+      </div>
+
+      <button id="startBtn" class="btn btn-primary">EKRANA TIKLA &amp; BAŞLA</button>
+      <p class="hint">Hayatta kal, XP topla, seviye atla ve güçlen.</p>
+    </div>
+  </div>
+
+  <!-- ===================== LEVEL ATLAMA ===================== -->
+  <div id="levelup" class="overlay hidden">
+    <div class="panel wide">
+      <h2 class="panel-title">⭐ SEVİYE ATLADIN!</h2>
+      <p class="panel-sub" id="levelupSub">Bir yükseltme seç</p>
+      <div class="cards" id="upgradeCards"></div>
+    </div>
+  </div>
+
+  <!-- ===================== DURAKLATMA ===================== -->
+  <div id="pause" class="overlay hidden">
+    <div class="panel">
+      <h2 class="panel-title">⏸ DURAKLATILDI</h2>
+      <p class="panel-sub">Devam etmek için ESC veya aşağıdaki buton</p>
+      <button id="resumeBtn" class="btn btn-primary">DEVAM ET</button>
+      <button id="pauseQuitBtn" class="btn btn-ghost">ANA MENÜYE DÖN</button>
+    </div>
+  </div>
+
+  <!-- ===================== OYUN BİTTİ ===================== -->
+  <div id="gameover" class="overlay hidden">
+    <div class="panel">
+      <h2 class="panel-title danger">💀 GAME OVER</h2>
+      <p class="panel-sub">Arenada hayatta kalamadın...</p>
+
+      <div class="result-grid">
+        <div class="result">
+          <div class="result-label">SKOR</div>
+          <div class="result-value" id="finalScore">0</div>
+        </div>
+        <div class="result">
+          <div class="result-label">SÜRE</div>
+          <div class="result-value" id="finalTime">00:00</div>
+        </div>
+        <div class="result">
+          <div class="result-label">LEVEL</div>
+          <div class="result-value" id="finalLevel">1</div>
+        </div>
+        <div class="result">
+          <div class="result-label">KESİLEN</div>
+          <div class="result-value" id="finalKills">0</div>
+        </div>
+      </div>
+
+      <p class="best-line">🏆 EN YÜKSEK SKOR: <span id="bestScore">0</span></p>
+
+      <button id="retryBtn" class="btn btn-primary">TEKRAR OYNA</button>
+      <button id="menuBtn" class="btn btn-ghost">ANA MENÜ</button>
+    </div>
+  </div>
+
+  <!-- Tarama çizgisi (scanline) efekti -->
+  <div class="scanlines"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
